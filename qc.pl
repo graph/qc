@@ -120,22 +120,23 @@ sub PreFile {
 	
 	my ($dir, $name, $cpp, $hfile);
 	my $lines;
-	if($file =~ m/^(.*)\/(.*)\.cpp$/){
+	my $type;
+	if($file =~ m/^(.*)\/(.*)\.([^\.]+)$/){
 		$dir = $1;
 		$name = $2;
-		
-		$cpp = "$name.cpp";
+		$type = $3;
+		$cpp = "$name.$type";
 		$hfile = "$name.h";
 		
 		$lines = OKToRemake("$dir/$hfile");
 		if($lines){
 			dofile("$dir/$cpp", "$dir/$hfile");
 		}
-	} elsif ($file =~ m/^([^\/]+)\.cpp$/){
+	} elsif ($file =~ m/^([^\/]+)\.([^\.]+)$/){
 		$dir = ".";
 		$name = $1;
-		
-		$cpp = "$name.cpp";
+		$type = $2;
+		$cpp = "$name.$type";
 		$hfile = "$name.h";
 		
 		$lines = OKToRemake("$dir/$hfile");
@@ -146,7 +147,7 @@ sub PreFile {
 		}
 			
 	} else {
-		print "Could not match file\n";
+		print "Could not match file $file\n";
 	}
 	
 }
