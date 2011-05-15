@@ -1,3 +1,4 @@
+#!/usr/perl
 use strict;
 # reduce repetitive stuff in c++
 sub loadFile {

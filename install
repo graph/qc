@@ -1,0 +1,6 @@
+PREFIX=$HOME/.local
+BINFILE=$PREFIX/bin/qc
+cp qc.pl $BINFILE
+chmod +x $BINFILE
+
+
