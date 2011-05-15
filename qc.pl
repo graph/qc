@@ -1,4 +1,4 @@
-#!/usr/perl
+#!/usr/bin/perl
 use strict;
 # reduce repetitive stuff in c++
 
