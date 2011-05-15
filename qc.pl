@@ -1,6 +1,24 @@
 #!/usr/perl
 use strict;
 # reduce repetitive stuff in c++
+
+# get an array of all files and sub files of given filetype
+sub AllFiles  {
+        my ($filetype) = @_;
+        my @files;
+        my $filtered = [];
+        @files = split("\n", `find ./ -type f`);
+
+        foreach(@files){
+                if($_ =~ /^\.\/+(.*\.$filetype)$/){
+                        push (@$filtered, $1);
+                }
+        }
+        return $filtered;
+}
+
+
+
 sub loadFile {
 	my ($file) = @_;
 	my ($fh);
@@ -37,7 +55,6 @@ sub OKToRemake {
 			$line_start = $line_num;
 		}
 		if($_ =~ m/^\#pragma\s+qc end\s*/){
-			print "Found lines\n";
 			$line_end = $line_num;
 			close($fh);
 			return [$line_start, $line_end];
@@ -46,13 +63,12 @@ sub OKToRemake {
 
 	}
 	close($fh);
-	print "Found no lines\n";
 	return 0;
 }
 sub dofile {
 	my ($cppfile, $hfile) = @_;
 	my $lines;
-	
+	print "Processing $cppfile/$hfile\n";
 	$lines = OKToRemake($hfile);
 	my $cfh;
 	open $cfh, "<$cppfile" or die "Could not open $cppfile";
@@ -89,7 +105,6 @@ sub dofile {
 	
 	for($i = 0; $i <= $$lines[0]; $i++){
 		print $hfh $$hfile_lines[$i] . "\n";
-		print $$hfile_lines[$i] . "\n";
 
 	}
 	for($i =0; $i < @$list; $i++){
@@ -97,7 +112,6 @@ sub dofile {
 	}
 	for($i = $$lines[1]; $i < @$hfile_lines; $i++){
 		print $hfh $$hfile_lines[$i] . "\n";
-		print $$hfile_lines[$i] . "\n";
 
 	}
 }
@@ -121,7 +135,6 @@ sub PreFile {
 		$dir = ".";
 		$name = $1;
 		
-		print "file = $name\n";
 		$cpp = "$name.cpp";
 		$hfile = "$name.h";
 		
@@ -140,7 +153,14 @@ sub PreFile {
 
 my $file;
 $file = $ARGV[0];
-
-print $file;
-
-PreFile($file);
+if($file eq "--all"){
+	# do all of em
+	my $files;
+	$files = AllFiles("cpp");
+	my $i;
+	for($i = 0; $i < @$files; $i++){
+		PreFile($$files[$i]);
+	}
+} else {
+	PreFile($file);
+}
