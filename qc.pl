@@ -152,14 +152,32 @@ sub PreFile {
 }
 
 my $file;
+my $i;
+my $filetypes = [];
+my $doall=0;
+push @$filetypes, "cpp";
+
+for($i = 0; $i < @ARGV; $i++){
+	if($ARGV[$i] eq "-f"){
+		push @$filetypes, $ARGV[$i+1];
+		$i++;
+	}
+	if($ARGV[$i] eq "--all" or $ARGV[$i] eq "-a"){
+		$doall = 1;
+	}
+
+}
 $file = $ARGV[0];
-if($file eq "--all"){
+if($doall){
 	# do all of em
 	my $files;
-	$files = AllFiles("cpp");
-	my $i;
-	for($i = 0; $i < @$files; $i++){
-		PreFile($$files[$i]);
+	my $type_n;
+	for($type_n = 0; $type_n < @$filetypes; $type_n++){
+		$files = AllFiles($$filetypes[$type_n]);
+		my $i;
+		for($i = 0; $i < @$files; $i++){
+			PreFile($$files[$i]);
+		}
 	}
 } else {
 	PreFile($file);
