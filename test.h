@@ -1,8 +1,9 @@
-bra r a eo 
 
-
+class reactor {
+public:
 #pragma qc start
 void somefunction();
+void init();
 #pragma qc end
+};
 
-bra bra

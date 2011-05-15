@@ -65,6 +65,9 @@ sub dofile {
 			if($function =~ m/(.*?)\s*\{\s*/){
 				$function = $1;
 			}
+			if($function =~ m/^#/){
+				next;
+			}
 			
 			# add to our list
 			push @$list, $function;
