@@ -65,6 +65,102 @@ sub OKToRemake {
 	close($fh);
 	return 0;
 }
+
+# return true when it is a pure header (All qc generated)
+sub isQCAll {
+    my ($file) = @_;
+    my $lines;
+	$lines = loadFile($file);
+    if($$lines[0] =~ m/#pragma\s+qc main/){
+        return 1;
+    }
+    return 0;
+}
+
+# the new thing to do which generates entire header for you
+sub qcAll {
+	my ($cppfile, $hfile) = @_;
+
+    my $lines;
+    my $gen = [];
+	
+	my $function;
+    my $gl;
+	my $list = [];
+	my $i;
+    
+
+    my $purecopy;
+    $lines = loadFile($cppfile);
+    if(!$lines){
+        print "Could not open $cppfile";
+    }
+    print "Processing $cppfile ...\n";
+    $purecopy = 0;
+	
+	push @$gen, "#pragma qc main";
+	push @$gen, "#pragma once";
+	
+    for($i = 0; $i < @$lines; $i++){
+		my $l;
+        $l = $$lines[$i];
+        if($purecopy > 0){
+            if($l =~ m/^#if/){
+                $purecopy++;
+            } elsif($l =~ m/^#endif/){
+                $purecopy--;
+            }
+            if($purecopy > 0){
+                push @$gen, $l;
+            }
+            next;
+        }
+		if($l =~ m/^(.*)\scc\s(.*)$/){
+			$function = "$1 $2";
+			if($function =~ m/(.*?)\s*\{\s*/){
+				$function = $1;
+			}
+			if($function =~ m/^#/){
+				next;
+			}
+			
+			# add to our list
+			push @$gen, "$function;";
+		} elsif ($l =~ m/^#pragma\s+qc\s+class\s+(.*)$/){
+           $gl = $1;
+           $gl = "class $gl {\npublic:";
+           push @$gen, $gl;
+        } elsif ($l =~ m/^#pragma\s+qc\s+end/){
+            $gl = "}";
+            push @$gen, $gl;
+        } elsif ($l =~ m/^#ifdef QC_PURE/){
+            $purecopy = 1;
+        } elsif ($l =~ m/^#ifndef QC_PURE/){ # so it can be in both places
+			$purecopy = 1;
+		} elsif ($l =~ m/^#include/){
+			push @$gen, $0;
+		} elsif ($l =~ m/^#import/){
+			push @$gen, $0;
+		}
+            
+        
+	}
+	
+
+	my $hfh;
+	open ($hfh, ">$hfile") or die "Could not open $hfile for outputing";
+	my($i);
+	
+
+	for($i = 0; $i <= @$gen; $i++){
+		print $hfh $$gen[$i] . "\n";
+
+	}
+    
+    close ($hfh);
+
+}
+
 sub dofile {
 	my ($cppfile, $hfile) = @_;
 	my $lines;
@@ -132,6 +228,10 @@ sub PreFile {
 		if($lines){
 			dofile("$dir/$cpp", "$dir/$hfile");
 		}
+        $lines = isQCAll("$dir/$hfile");
+        if($lines){
+            qcAll("$dir/$cpp", "$dir/$hfile");
+        }
 	} elsif ($file =~ m/^([^\/]+)\.([^\.]+)$/){
 		$dir = ".";
 		$name = $1;
@@ -139,12 +239,15 @@ sub PreFile {
 		$cpp = "$name.$type";
 		$hfile = "$name.h";
 		
+		#TODO: Use a pass var instaead of duplicating above
 		$lines = OKToRemake("$dir/$hfile");
 		if($lines){
 			dofile("$dir/$cpp", "$dir/$hfile");
-		} else {
-			print "no lines\n";
 		}
+        $lines = isQCAll("$dir/$hfile");
+        if($lines){
+            qcAll("$dir/$cpp", "$dir/$hfile");
+        }
 			
 	} else {
 		print "Could not match file $file\n";
