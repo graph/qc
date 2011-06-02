@@ -131,7 +131,7 @@ sub qcAll {
 			push @$gen, "$function;";
 		} elsif($l =~ m/^#pragma\s+qc\s+class\s+(\S+)\s*\:\s*(\S+)\s*$/){
 			# auto put public :)
-			$gl = "class $1 : public $2 {";
+			$gl = "class $1 : public $2 {\npublic:\ntypedef $2 super;\n";
 			push @$gen, $gl;
 		}elsif ($l =~ m/^#pragma\s+qc\s+class\s+(.*)$/){
            $gl = $1;
