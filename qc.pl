@@ -71,6 +71,9 @@ sub isQCAll {
     my ($file) = @_;
     my $lines;
 	$lines = loadFile($file);
+	if(!$lines) {
+		return 0;
+	}
     if($$lines[0] =~ m/#pragma\s+qc main/){
         return 1;
     }
