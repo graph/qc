@@ -1,6 +1,9 @@
+#include "qcall.h"
+
+#ifndef QC_PURE
 #include <stdlib.h>
 #include <stdio.h>
-
+#endif
 #define cc HH::
 
 #pragma qc class HH
@@ -12,7 +15,7 @@ int y;
 int cc sum(){
 return x + y;
 }
-#pragma qc end
+#pragma qc endc
 
 int main(){
 	HH a;

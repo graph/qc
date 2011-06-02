@@ -130,18 +130,19 @@ sub qcAll {
            $gl = $1;
            $gl = "class $gl {\npublic:";
            push @$gen, $gl;
-        } elsif ($l =~ m/^#pragma\s+qc\s+end/){
-            $gl = "}";
+        } elsif ($l =~ m/^#pragma\s+qc\s+endc/){
+            $gl = "};";
             push @$gen, $gl;
         } elsif ($l =~ m/^#ifdef QC_PURE/){
             $purecopy = 1;
         } elsif ($l =~ m/^#ifndef QC_PURE/){ # so it can be in both places
 			$purecopy = 1;
-		} elsif ($l =~ m/^#include/){
-			push @$gen, $0;
-		} elsif ($l =~ m/^#import/){
-			push @$gen, $0;
-		}
+		} 
+		#elsif ($l =~ m/^(#include.*$)/){
+		#	push @$gen, $1;
+		#} elsif ($l =~ m/^(#import.*$)/){
+		#	push @$gen, $1;
+		#}
             
         
 	}
@@ -152,11 +153,11 @@ sub qcAll {
 	my($i);
 	
 
-	for($i = 0; $i <= @$gen; $i++){
+	for($i = 0; $i < @$gen; $i++){
 		print $hfh $$gen[$i] . "\n";
 
 	}
-    
+    print $hfh "\n";
     close ($hfh);
 
 }

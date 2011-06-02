@@ -1,11 +1,11 @@
 #pragma qc main
 #pragma once
-../qc.pl
-../qc.pl
+#include <stdlib.h>
+#include <stdio.h>
 class HH {
 public:
 int x;
 int y;
 int sum();
-}
+};
 
