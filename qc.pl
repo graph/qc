@@ -126,7 +126,11 @@ sub qcAll {
 			
 			# add to our list
 			push @$gen, "$function;";
-		} elsif ($l =~ m/^#pragma\s+qc\s+class\s+(.*)$/){
+		} elsif($l =~ m/^#pragma\s+qc\s+class\s+(\S+)\s*\:\s*(\S+)\s*$/){
+			# auto put public :)
+			$gl = "class $1 : public $2 {";
+			push @$gen, $gl;
+		}elsif ($l =~ m/^#pragma\s+qc\s+class\s+(.*)$/){
            $gl = $1;
            $gl = "class $gl {\npublic:";
            push @$gen, $gl;
