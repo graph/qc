@@ -17,7 +17,20 @@ sub AllFiles  {
         return $filtered;
 }
 
-
+sub equalArrays {
+	my ($a, $b) = @_;
+	
+	if(@$a != @$b){
+		return 0;
+	}
+	my $i;
+	for($i = 0; $i < @$a; $i++){
+		if($$a[$i] != $$b[$i]){
+			return 0;
+		}
+	}
+	return 1;
+}
 
 sub loadFile {
 	my ($file) = @_;
@@ -154,6 +167,12 @@ sub qcAll {
         
 	}
 	
+	my $hfilelist;
+	$hfilelist = loadFile($hfile);
+	if(equalArrays($gen, $hfilelist)){
+		#dont do anything
+		return 1;
+	}
 
 	my $hfh;
 	open ($hfh, ">$hfile") or die "Could not open $hfile for outputing";
@@ -166,7 +185,7 @@ sub qcAll {
 	}
     print $hfh "\n";
     close ($hfh);
-
+	return 1;
 }
 
 sub dofile {
