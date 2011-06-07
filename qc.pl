@@ -282,6 +282,43 @@ sub PreFile {
 	
 }
 
+
+sub complieCPP {
+	my ($code) = @_;
+	my $i;
+	my $gen = [];
+	my $function_prepend="";
+	
+	for($i = 0; $i < @$code; $i++){
+		my $line;
+		$line = $$code[$i];
+		if($line =~ m/(\s*)if\s(.*)$/){
+			push @$gen, $1 . "if ($2) {";
+		} elsif($line =~ m/^(\s*)end\s*$/){
+			push @$gen, "$1}";
+		} elsif($line =~ m/^(\s*)else(\s*)$/){
+			push @$gen, "$1 } else {"; 
+		} elsif($line =~ m/(.*)\s(\S+\s*\(.*\))\{\s*$/){
+			# its a function
+			push @$gen, "$1 $function_prepend" . "$2 {";
+		} elsif($line =~ m/\{\s*/){
+			push @$gen, $line;
+		} elsif($Line =~ m/(\s*)\}\s*/){
+			push @$gen, $1 . "}";
+		} elsif($line =~ m/^\s*class\s+(\S+)\s*:\s*(\S+)$/){
+			function_prepend = $1 . "::";
+			push @$gen, "class $1 : public $2 {public: typedef $2 super;";
+		} elsif($line =~ m/^\s*class\s+(\S+)\s*$/){
+			function_prepend = $1 . "::";
+			push @$gen, "class $1 {public:";
+		}
+		
+		else {
+			push $gen, "$line;"; # add a semicolor :)
+		}
+	}
+}
+
 my $file;
 my $i;
 my $filetypes = [];
