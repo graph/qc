@@ -25,7 +25,7 @@ sub equalArrays {
 	}
 	my $i;
 	for($i = 0; $i < @$a; $i++){
-		if($$a[$i] != $$b[$i]){
+		if($$a[$i] ne $$b[$i]){
 			return 0;
 		}
 	}
@@ -303,18 +303,18 @@ sub complieCPP {
 			push @$gen, "$1 $function_prepend" . "$2 {";
 		} elsif($line =~ m/\{\s*/){
 			push @$gen, $line;
-		} elsif($Line =~ m/(\s*)\}\s*/){
+		} elsif($line =~ m/(\s*)\}\s*/){
 			push @$gen, $1 . "}";
 		} elsif($line =~ m/^\s*class\s+(\S+)\s*:\s*(\S+)$/){
-			function_prepend = $1 . "::";
+			$function_prepend = $1 . "::";
 			push @$gen, "class $1 : public $2 {public: typedef $2 super;";
 		} elsif($line =~ m/^\s*class\s+(\S+)\s*$/){
-			function_prepend = $1 . "::";
+			$function_prepend = $1 . "::";
 			push @$gen, "class $1 {public:";
 		}
 		
 		else {
-			push $gen, "$line;"; # add a semicolor :)
+			push @$gen, "$line" . ";"; # add a semicolor :)
 		}
 	}
 }
