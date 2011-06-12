@@ -142,7 +142,20 @@ sub qcAll {
 			
 			# add to our list
 			push @$gen, "$function;";
-		} elsif($l =~ m/^#pragma\s+qc\s+class\s+(\S+)\s*\:\s*(\S+)\s*$/){
+		} elsif($l =~ m/^\s*cc\s(.*)$/){
+			$function = "$1";
+			if($function =~ m/(.*?)\s*\{\s*/){
+				$function = $1;
+			}
+			if($function =~ m/^#/){
+					next;
+			}
+			
+			# add to our list
+			push @$gen, "$function;";
+		}
+		
+		elsif($l =~ m/^#pragma\s+qc\s+class\s+(\S+)\s*\:\s*(\S+)\s*$/){
 			# auto put public :)
 			$gl = "class $1 : public $2 {\npublic:\ntypedef $2 super;\n";
 			push @$gen, $gl;
@@ -283,7 +296,7 @@ sub PreFile {
 }
 
 
-sub complieCPP {
+sub compileCPP {
 	my ($code) = @_;
 	my $i;
 	my $gen = [];
