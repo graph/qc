@@ -1,6 +1,10 @@
 #!/usr/bin/perl
 use strict;
+use File::Basename
+
 # reduce repetitive stuff in c++
+#quick C = qc
+our $outdir;
 
 # get an array of all files and sub files of given filetype
 sub AllFiles  {
@@ -251,12 +255,24 @@ sub dofile {
 
 	}
 }
+
+sub doqc {
+	my ($file, $outdir) = @_;
+	my ($cpp, $h);
+	my ($dir, $name, $ext) = fileparse($file);
+	
+	return 0;
+}
+
 sub PreFile {
 	my ($file) = @_;
 	
 	my ($dir, $name, $cpp, $hfile);
 	my $lines;
 	my $type;
+	my $pass;
+	
+	$pass = 1;
 	if($file =~ m/^(.*)\/(.*)\.([^\.]+)$/){
 		$dir = $1;
 		$name = $2;
@@ -280,17 +296,24 @@ sub PreFile {
 		$hfile = "$name.h";
 		
 		#TODO: Use a pass var instaead of duplicating above
-		$lines = OKToRemake("$dir/$hfile");
-		if($lines){
-			dofile("$dir/$cpp", "$dir/$hfile");
-		}
-        $lines = isQCAll("$dir/$hfile");
-        if($lines){
-            qcAll("$dir/$cpp", "$dir/$hfile");
-        }
+
 			
 	} else {
 		print "Could not match file $file\n";
+		$pass = 0;
+	}
+	if(!$pass)return 0;
+	if($type eq "qc"){
+		$outdir =  "./qcout";
+		return doqc("$dir/$cpp", $outdir);
+	}
+	$lines = OKToRemake("$dir/$hfile");
+	if($lines){
+		dofile("$dir/$cpp", "$dir/$hfile");
+	}
+	$lines = isQCAll("$dir/$hfile");
+	if($lines){
+		qcAll("$dir/$cpp", "$dir/$hfile");
 	}
 	
 }
@@ -320,6 +343,30 @@ sub compileCPP {
 			push @$gen, $1 . "}";
 		} elsif($line =~ m/^\s*class\s+(\S+)\s*:\s*(\S+)$/){
 			$function_prepend = $1 . "::";
+		} elsif($line =~ m/^\s*class\s+(\S+)\s*$/){
+			$function_prepend = $1 . "::";
+		}
+		
+		else {
+			push @$gen, "$line" . ";"; # add a semicolor :)
+		}
+	}
+	return $gen;
+}
+sub compileH {
+	my ($code) = @_;
+	my $i;
+	my $gen = [];
+	my $function_prepend="";
+	
+	for($i = 0; $i < @$code; $i++){
+		my $line;
+		$line = $$code[$i];
+		if($line =~ m/(.*)\s(\S+\s*\(.*\))\{\s*$/){
+			# its a function
+			push @$gen, "$1 " . "$2 ;";
+		} elsif($line =~ m/^\s*class\s+(\S+)\s*:\s*(\S+)$/){
+			$function_prepend = $1 . "::";
 			push @$gen, "class $1 : public $2 {public: typedef $2 super;";
 		} elsif($line =~ m/^\s*class\s+(\S+)\s*$/){
 			$function_prepend = $1 . "::";
@@ -330,6 +377,7 @@ sub compileCPP {
 			push @$gen, "$line" . ";"; # add a semicolor :)
 		}
 	}
+	return $gen;
 }
 
 my $file;
