@@ -397,7 +397,7 @@ sub compileH {
 		}
 		
 		else {
-			push @$gen, "$line" . ";"; # add a semicolor :)
+			# nothing to do here in header file
 		}
 	}
 	return $gen;
