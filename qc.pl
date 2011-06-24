@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 use strict;
-use File::Basename
+use File::Basename;
 
 # reduce repetitive stuff in c++
 #quick C = qc
@@ -52,7 +52,20 @@ sub loadFile {
 	close($fh);
 	return $lines;
 }
-	
+
+sub saveFile {
+	my ($lines, $file) = @_;
+	my $i;
+	my $fh;
+	my $r;
+	$r = open $fh, ">$file";
+	if(!$r) { return 0; }
+	for($i = 0; $i < @$lines; $i++){
+		print $fh $$lines[$i];
+		print $fh "\n";
+	}
+	close $fh;
+}
 sub OKToRemake {
 	my ($file) = @_;
 	my $fh;
@@ -259,7 +272,17 @@ sub dofile {
 sub doqc {
 	my ($file, $outdir) = @_;
 	my ($cpp, $h);
-	my ($dir, $name, $ext) = fileparse($file);
+	my ($name, $dir, $ext) = fileparse($file, "\.[^\.]+\$");
+	my $hcode;
+	my $cppcode;
+	my $code;
+	$code = loadFile($file);
+	
+	$hcode = compileH($code);
+	$cppcode = compileCPP($code);
+	print "name =$dir :: $name :: $ext \n"; 
+	saveFile($hcode, "$outdir/$name.h");
+	saveFile($cppcode, "$outdir/$name.cpp");
 	
 	return 0;
 }
@@ -302,8 +325,9 @@ sub PreFile {
 		print "Could not match file $file\n";
 		$pass = 0;
 	}
-	if(!$pass)return 0;
+	return 0 if(!$pass);
 	if($type eq "qc"){
+		print "Preprocessing qc file ...\n";
 		$outdir =  "./qcout";
 		return doqc("$dir/$cpp", $outdir);
 	}
@@ -317,7 +341,6 @@ sub PreFile {
 	}
 	
 }
-
 
 sub compileCPP {
 	my ($code) = @_;
