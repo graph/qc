@@ -1,10 +1,16 @@
 #!/usr/bin/perl
 use strict;
 use File::Basename;
+use File::Spec;
 
 # reduce repetitive stuff in c++
 #quick C = qc
 our $outdir;
+
+sub abspath {
+	my ($path) = @_;
+	return File::Spec->rel2abs($path);
+}
 
 # get an array of all files and sub files of given filetype
 sub AllFiles  {
@@ -269,6 +275,17 @@ sub dofile {
 	}
 }
 
+sub getQCDir {
+	my ($startdir) = @_;
+	$startdir = abspath($startdir);
+	
+	while ($startdir && length($startdir) > 0){	
+		if(-d "$startdir/qcout"){
+			return "$startdir/qcout";
+		}
+		$startdir = basename($startdir);
+	}
+}
 sub doqc {
 	my ($file, $outdir) = @_;
 	my ($cpp, $h);
@@ -280,7 +297,7 @@ sub doqc {
 	
 	$hcode = compileH($code);
 	$cppcode = compileCPP($code);
-	print "name =$dir :: $name :: $ext \n"; 
+
 	saveFile($hcode, "$outdir/$name.h");
 	saveFile($cppcode, "$outdir/$name.cpp");
 	
@@ -328,7 +345,8 @@ sub PreFile {
 	return 0 if(!$pass);
 	if($type eq "qc"){
 		print "Preprocessing qc file ...\n";
-		$outdir =  "./qcout";
+		$outdir = getQCDir($dir);
+		print "qcdir = $outdir\n";
 		return doqc("$dir/$cpp", $outdir);
 	}
 	$lines = OKToRemake("$dir/$hfile");
