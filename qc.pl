@@ -365,6 +365,11 @@ sub compileCPP {
 	my $i;
 	my $gen = [];
 	my $function_prepend="";
+	my $braceLevel;
+	my $inClass;
+	
+	$braceLevel = 0;
+	$inClass = 0;
 	push @$gen, "#include \"$fileName" . ".h\"";
 	for($i = 0; $i < @$code; $i++){
 		my $line;
@@ -378,17 +383,23 @@ sub compileCPP {
 		} elsif($line =~ m/(.*)\s(\S+\s*\(.*\))\{\s*$/){
 			# its a function
 			push @$gen, "$1 $function_prepend" . "$2 {";
+			$braceLevel++;
 		} elsif($line =~ m/\{\s*/){
 			push @$gen, $line;
+			$braceLevel++;
 		} elsif($line =~ m/(\s*)\}\s*/){
 			push @$gen, $1 . "}";
+			$braceLevel--;
 		} elsif($line =~ m/^\s*class\s+(\S+)\s*:\s*(\S+)$/){
 			$function_prepend = $1 . "::";
+			$inClass = 1;
 		} elsif($line =~ m/^\s*class\s+(\S+)\s*$/){
 			$function_prepend = $1 . "::";
+			$inClass = 1;
 		} elsif($line =~ m/^\s*endclass/){
 			# do nothing
 			$function_prepend = "";
+			$inClass = 0;
 		} elsif($line =~ m/^\s*include\s*(".*")\s*$/){
 			# for includeing files
 			push @$gen, ""
@@ -399,7 +410,11 @@ sub compileCPP {
 			{
 				push @$gen, "$line";
 			} else {
-				push @$gen, "$line" . ";"; # add a semicolor :)
+				if(!$inClass){
+					push @$gen, "$line" . ";"; # add a semicolor :)
+				} elsif($braceLevel > 0){
+					push @$gen, "$line" . ";";
+				}
 			}
 		}
 	}
@@ -410,6 +425,11 @@ sub compileH {
 	my $i;
 	my $gen = [];
 	my $function_prepend="";
+	my $braceLevel;
+	my $inClass;
+
+	$braceLevel = 0;
+	$inClass = 0;
 	
 	for($i = 0; $i < @$code; $i++){
 		my $line;
@@ -417,20 +437,29 @@ sub compileH {
 		if($line =~ m/(.*)\s(\S+\s*\(.*\))\{\s*$/){
 			# its a function
 			push @$gen, "$1 " . "$2 ;";
+			$braceLevel++;
 		} elsif($line =~ m/^\s*class\s+(\S+)\s*:\s*(\S+)$/){
 			push @$gen, "class $1 : public $2 {public: typedef $2 super;";
+			$inClass = 1;
 		} elsif($line =~ m/^\s*class\s+(\S+)\s*$/){
 			push @$gen, "class $1 {public:";
+			$inClass = 1;
 		} elsif($line =~ m/^\s*include\s*(".*")\s*$/){
 			# for includeing files
 			push @$gen, "#include $1"
 		}elsif($line =~ m/^\s*endclass/){
 			$function_prepend = "";
 			push @$gen, "};";
+		} elsif($line =~ m/^\s*\}\s*$/){
+			$braceLevel--;
 		}
 		
 		else {
 			# nothing to do here in header file
+			if($line =~ m/^\s*$/){
+			}elsif($inClass && $braceLevel == 0){
+				push @$gen, "$line" . ";";
+			}
 		}
 	}
 	return $gen;
