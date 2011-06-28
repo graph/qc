@@ -365,7 +365,7 @@ sub compileCPP {
 	my $i;
 	my $gen = [];
 	my $function_prepend="";
-	push @$gen, "#include \"$fileName\"";
+	push @$gen, "#include \"$fileName" . ".h\"";
 	for($i = 0; $i < @$code; $i++){
 		my $line;
 		$line = $$code[$i];
@@ -423,7 +423,7 @@ sub compileH {
 			push @$gen, "class $1 {public:";
 		} elsif($line =~ m/^\s*include\s*(".*")\s*$/){
 			# for includeing files
-			push @$gen, "#include \"$1\""
+			push @$gen, "#include $1"
 		}elsif($line =~ m/^\s*endclass/){
 			$function_prepend = "";
 			push @$gen, "};";
