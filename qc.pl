@@ -283,7 +283,7 @@ sub getQCDir {
 		if(-d "$startdir/qcout"){
 			return "$startdir/qcout";
 		}
-		$startdir = basename($startdir);
+		$startdir = dirname($startdir);
 	}
 }
 sub doqc {
@@ -296,7 +296,7 @@ sub doqc {
 	$code = loadFile($file);
 	
 	$hcode = compileH($code);
-	$cppcode = compileCPP($code);
+	$cppcode = compileCPP($code, $name);
 
 	saveFile($hcode, "$outdir/$name.h");
 	saveFile($cppcode, "$outdir/$name.cpp");
@@ -361,11 +361,11 @@ sub PreFile {
 }
 
 sub compileCPP {
-	my ($code) = @_;
+	my ($code, $fileName) = @_;
 	my $i;
 	my $gen = [];
 	my $function_prepend="";
-	
+	push @$gen, "#include \"$fileName\"";
 	for($i = 0; $i < @$code; $i++){
 		my $line;
 		$line = $$code[$i];
@@ -386,10 +386,21 @@ sub compileCPP {
 			$function_prepend = $1 . "::";
 		} elsif($line =~ m/^\s*class\s+(\S+)\s*$/){
 			$function_prepend = $1 . "::";
+		} elsif($line =~ m/^\s*endclass/){
+			# do nothing
+			$function_prepend = "";
+		} elsif($line =~ m/^\s*include\s*(".*")\s*$/){
+			# for includeing files
+			push @$gen, ""
 		}
 		
 		else {
-			push @$gen, "$line" . ";"; # add a semicolor :)
+			if(($line =~ m/^\s*$/))
+			{
+				push @$gen, "$line";
+			} else {
+				push @$gen, "$line" . ";"; # add a semicolor :)
+			}
 		}
 	}
 	return $gen;
@@ -407,11 +418,15 @@ sub compileH {
 			# its a function
 			push @$gen, "$1 " . "$2 ;";
 		} elsif($line =~ m/^\s*class\s+(\S+)\s*:\s*(\S+)$/){
-			$function_prepend = $1 . "::";
 			push @$gen, "class $1 : public $2 {public: typedef $2 super;";
 		} elsif($line =~ m/^\s*class\s+(\S+)\s*$/){
-			$function_prepend = $1 . "::";
 			push @$gen, "class $1 {public:";
+		} elsif($line =~ m/^\s*include\s*(".*")\s*$/){
+			# for includeing files
+			push @$gen, "#include \"$1\""
+		}elsif($line =~ m/^\s*endclass/){
+			$function_prepend = "";
+			push @$gen, "};";
 		}
 		
 		else {
@@ -426,6 +441,7 @@ my $i;
 my $filetypes = [];
 my $doall=0;
 push @$filetypes, "cpp";
+push @$filetypes, "qc";
 
 for($i = 0; $i < @ARGV; $i++){
 	if($ARGV[$i] eq "-f"){
