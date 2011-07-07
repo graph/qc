@@ -367,20 +367,27 @@ sub compileCPP {
 	my $function_prepend="";
 	my $braceLevel;
 	my $inClass;
+	my $inEnum;
 	
 	$braceLevel = 0;
 	$inClass = 0;
+	$inEnum = 0;
 	push @$gen, "#include \"$fileName" . ".h\"";
 	for($i = 0; $i < @$code; $i++){
 		my $line;
 		$line = $$code[$i];
-		if($line =~ m/(\s*)if\s(.*)$/){
+		
+		if(!$inEnum && $line =~ m/(\s*)if\s(.*)$/){
 			push @$gen, $1 . "if ($2) {";
 		} elsif($line =~ m/^(\s*)end\s*$/){
-			push @$gen, "$1}";
-		} elsif($line =~ m/^(\s*)else(\s*)$/){
+			if($inEnum) {
+				$inEnum = 0;
+			} else {
+				push @$gen, "$1}";
+			}
+		} elsif(!$inEnum && $line =~ m/^(\s*)else(\s*)$/){
 			push @$gen, "$1 } else {"; 
-		} elsif($line =~ m/(.*)\s(\S+\s*\(.*\))\{\s*$/){
+		} elsif(!$inEnum && $line =~ m/(.*)\s+(\S+\s*\(.*\))\s*\{\s*$/){
 			# its a function
 			push @$gen, "$1 $function_prepend" . "$2 {";
 			$braceLevel++;
@@ -400,9 +407,14 @@ sub compileCPP {
 			# do nothing
 			$function_prepend = "";
 			$inClass = 0;
+		} elsif($line =~ m/^\s*enum\s*$/){
+			$inEnum = 1;
 		} elsif($line =~ m/^\s*include\s*(".*")\s*$/){
 			# for includeing files
 			push @$gen, ""
+		} elsif($line =~ /^\s*require\s*(".*")\s*$/){
+			# include file thats only in the source but not header
+			push @$gen, "#include $1";
 		}
 		
 		else {
@@ -427,14 +439,23 @@ sub compileH {
 	my $function_prepend="";
 	my $braceLevel;
 	my $inClass;
-
+	my $inEnum;
 	$braceLevel = 0;
 	$inClass = 0;
+	$inEnum = 0;
+	push @$gen, "#pragma once";
 	
 	for($i = 0; $i < @$code; $i++){
 		my $line;
 		$line = $$code[$i];
-		if($line =~ m/(.*)\s(\S+\s*\(.*\))\{\s*$/){
+		if($line =~ m/^\s*end\s*$/){
+			if($inEnum){
+				push @$gen, "// enum ended";
+
+				push @$gen, "};";
+				$inEnum = 0;
+			}
+		}elsif($line =~ m/(.*)\s+(\S+\s*\(.*\))\s*\{\s*$/){
 			# its a function
 			push @$gen, "$1 " . "$2 ;";
 			$braceLevel++;
@@ -449,15 +470,21 @@ sub compileH {
 			push @$gen, "#include $1"
 		}elsif($line =~ m/^\s*endclass/){
 			$function_prepend = "";
+			$inClass = 0;
 			push @$gen, "};";
 		} elsif($line =~ m/^\s*\}\s*$/){
 			$braceLevel--;
+		} elsif($line =~ m/^\s*enum\s*/){
+			$inEnum = 1;
+			push @$gen, "enum {";
 		}
 		
 		else {
 			# nothing to do here in header file
 			if($line =~ m/^\s*$/){
-			}elsif($inClass && $braceLevel == 0){
+			} elsif($inEnum){
+				push @$gen, "$line,";
+			} elsif($inClass && $braceLevel == 0){
 				push @$gen, "$line" . ";";
 			}
 		}
