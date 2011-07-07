@@ -397,6 +397,10 @@ sub compileCPP {
 			# its a function
 			push @$gen, "$1 $function_prepend" . "$2 {";
 			$braceLevel++;
+		} elsif($line =~ m/(.*)\s+([^\(\)\s]+)\s*\{\s*$/) {
+			# its a function with ()
+			push @$gen, "$1 $function_prepend" . "$2 () {";
+			$braceLevel++;
 		} elsif($line =~ m/\{\s*/){
 			push @$gen, $line;
 			$braceLevel++;
@@ -464,6 +468,10 @@ sub compileH {
 		}elsif($line =~ m/(.*)\s+(\S+\s*\(.*\))\s*\{\s*$/){
 			# its a function
 			push @$gen, "$1 " . "$2 ;";
+			$braceLevel++;
+		} elsif($line =~ m/(.*)\s+([^\(\)\s]+)\s*\{\s*$/) {
+			# its a function with ()
+			push @$gen, "$1 $function_prepend" . "$2 () ;";
 			$braceLevel++;
 		} elsif($line =~ m/^\s*class\s+(\S+)\s*:\s*(\S+)$/){
 			push @$gen, "class $1 : public $2 {public: typedef $2 super;";
