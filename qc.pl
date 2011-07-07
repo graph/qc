@@ -381,8 +381,10 @@ sub compileCPP {
 			push @$gen, $1 . "if ($2) {";
 		} elsif($line =~ m/(\s*)switch\s+(.*)\s*$/){
 			push @$gen, $1 . "switch ($2) {";
-		} elsif($line =~ m/(\s*)case\s+(.*):\s*$/ or $line =~ m/(\s*)case\s+(.*)\s*$){
+		} elsif($line =~ m/(\s*)case\s+(.*):\s*$/ or $line =~ m/(\s*)case\s+(.*)\s*$/){
 			push @$gen, $1 . "case $2:";
+		} elsif($line =~ m/(\s*)default\s*$/ or $line =~ m/(\s*)default:\s*$/){
+			push @$gen, $1 . "default:";
 		} elsif($line =~ m/^(\s*)end\s*$/){
 			if($inEnum) {
 				$inEnum = 0;
