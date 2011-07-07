@@ -296,7 +296,7 @@ sub doqc {
 	$code = loadFile($file);
 	
 	$hcode = compileH($code);
-	$cppcode = compileCPP($code, $name);
+	$cppcode = compileCPP($code, $file);
 
 	saveFile($hcode, "$outdir/$name.h");
 	saveFile($cppcode, "$outdir/$name.cpp");
@@ -361,22 +361,40 @@ sub PreFile {
 }
 
 sub compileCPP {
-	my ($code, $fileName) = @_;
+	my ($code, $file) = @_;
 	my $i;
 	my $gen = [];
 	my $function_prepend="";
 	my $braceLevel;
 	my $inClass;
 	my $inEnum;
+	my $lineNumber;
+	my $genSize;
+	my $fileName;
+	my $dir;
+	my $ext;
+	
+	($fileName, $dir, $ext) = fileparse($file, "\.[^\.]+\$");
 	
 	$braceLevel = 0;
 	$inClass = 0;
 	$inEnum = 0;
+	$lineNumber = 0;
 	push @$gen, "#include \"$fileName" . ".h\"";
+	
+	my $fullFileName;
+	$fullFileName = abspath($file);
+	push @$gen, "#" . "line 1 \"$fullFileName\"";
+	$genSize = 0;
 	for($i = 0; $i < @$code; $i++){
 		my $line;
 		$line = $$code[$i];
-		
+		$lineNumber++;
+		$genSize++;
+		if(@$gen != $genSize){
+			push @$gen, "#" . "line $lineNumber \"$fullFileName\"";
+			$genSize = @$gen;
+		}
 		if(!$inEnum && $line =~ m/(\s*)if\s(.*)$/){
 			push @$gen, $1 . "if ($2) {";
 		} elsif($line =~ m/(\s*)switch\s+(.*)\s*$/){
@@ -425,6 +443,9 @@ sub compileCPP {
 		} elsif($line =~ /^\s*require\s*(".*")\s*$/){
 			# include file thats only in the source but not header
 			push @$gen, "#include $1";
+		} elsif($line =~ /^#/){
+			# allow pasthrough custom macros
+			push @$gen, $line;
 		}
 		
 		else {
@@ -491,6 +512,9 @@ sub compileH {
 		} elsif($line =~ m/^\s*enum\s*/){
 			$inEnum = 1;
 			push @$gen, "enum {";
+		} elsif($line =~ /^#/){
+			# allow pasthrough custom macros
+			# dont print them in header
 		}
 		
 		else {
