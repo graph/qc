@@ -41,7 +41,15 @@ sub equalArrays {
 	}
 	return 1;
 }
-
+sub sameFileContents {
+	my ($contents, $file) = @_;
+	my $fcontents;
+	$fcontents = loadFile($file);
+	if(!$fcontents) { 
+		return 0;
+	}
+	return equalArrays($contents, $fcontents);
+}
 sub loadFile {
 	my ($file) = @_;
 	my ($fh);
@@ -71,6 +79,7 @@ sub saveFile {
 		print $fh "\n";
 	}
 	close $fh;
+	print "Saved $file ...";
 }
 sub OKToRemake {
 	my ($file) = @_;
@@ -297,9 +306,12 @@ sub doqc {
 	
 	$hcode = compileH($code);
 	$cppcode = compileCPP($code, $file);
-
-	saveFile($hcode, "$outdir/$name.h");
-	saveFile($cppcode, "$outdir/$name.cpp");
+	if(!sameFileContents($hcode, "$outdir/$name.h")){
+		saveFile($hcode, "$outdir/$name.h");
+	}
+	if(!sameFileContents($cppcode, "$outdir/$name.cpp")){
+		saveFile($cppcode, "$outdir/$name.cpp");
+	}
 	
 	return 0;
 }
@@ -397,6 +409,8 @@ sub compileCPP {
 		}
 		if(!$inEnum && $line =~ m/(\s*)if\s(.*)$/){
 			push @$gen, $1 . "if ($2) {";
+		} elsif ($line =~ m/(\s*)while\s(.*)$/){
+			push @$gen, $1 . "while ($2) {";
 		} elsif($line =~ m/(\s*)switch\s+(.*)\s*$/){
 			push @$gen, $1 . "switch ($2) {";
 		} elsif($line =~ m/(\s*)case\s+(.*):\s*$/ or $line =~ m/(\s*)case\s+(.*)\s*$/){
