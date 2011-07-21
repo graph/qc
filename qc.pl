@@ -440,6 +440,9 @@ sub compileCPP {
 		} elsif($line =~ m/^\s*include\s*(".*")\s*$/){
 			# for includeing files
 			push @$gen, ""
+		} elsif($line =~ m/^\s*include\s*(<.*>)\s*$/){
+			# for includeing files
+			push @$gen, ""
 		} elsif($line =~ /^\s*require\s*(".*")\s*$/){
 			# include file thats only in the source but not header
 			push @$gen, "#include $1";
@@ -501,6 +504,9 @@ sub compileH {
 			push @$gen, "class $1 {public:";
 			$inClass = 1;
 		} elsif($line =~ m/^\s*include\s*(".*")\s*$/){
+			# for includeing files
+			push @$gen, "#include $1"
+		} elsif($line =~ m/^\s*include\s*(<.*>)\s*$/){
 			# for includeing files
 			push @$gen, "#include $1"
 		}elsif($line =~ m/^\s*endclass/){
