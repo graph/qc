@@ -411,6 +411,8 @@ sub compileCPP {
 			push @$gen, $1 . "if ($2) {";
 		} elsif ($line =~ m/(\s*)while\s(.*)$/){
 			push @$gen, $1 . "while ($2) {";
+		} elsif ($line =~ m/(\s*)for\s(.*)$/){
+			push @$gen, $1 . "for ($2) {";
 		} elsif($line =~ m/(\s*)switch\s+(.*)\s*$/){
 			push @$gen, $1 . "switch ($2) {";
 		} elsif($line =~ m/(\s*)case\s+(.*):\s*$/ or $line =~ m/(\s*)case\s+(.*)\s*$/){
