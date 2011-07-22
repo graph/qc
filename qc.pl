@@ -190,19 +190,20 @@ sub qcAll {
 		elsif($l =~ m/^#pragma\s+qc\s+class\s+(\S+)\s*\:\s*(\S+)\s*$/){
 			# auto put public :)
 			$gl = "class $1 : public $2 {\npublic:\ntypedef $2 super;";
-			$gl = split("\n", $gl);
-			push @$gen, $gl;
+			my @a;
+			@a = split("\n", $gl);
+			push @$gen, @a;
 		}elsif ($l =~ m/^#pragma\s+qc\s+class\s+(.*)$/){
-           $gl = $1;
-           $gl = "class $gl {\npublic:";
-           $gl = split("\n", $gl);
-           push @$gen, $gl;
-        } elsif ($l =~ m/^#pragma\s+qc\s+endc/){
-            $gl = "};";
-            push @$gen, $gl;
-        } elsif ($l =~ m/^#ifdef QC_PURE/){
-            $purecopy = 1;
-        } elsif ($l =~ m/^#ifndef QC_PURE/){ # so it can be in both places
+			$gl = $1;
+			$gl = "class $gl {\npublic:";
+			my @a;
+			push @$gen, @a;
+		} elsif ($l =~ m/^#pragma\s+qc\s+endc/){
+			$gl = "};";
+			push @$gen, $gl;
+		} elsif ($l =~ m/^#ifdef QC_PURE/){
+			$purecopy = 1;
+		} elsif ($l =~ m/^#ifndef QC_PURE/){ # so it can be in both places
 			$purecopy = 1;
 		} 
 		#elsif ($l =~ m/^(#include.*$)/){
