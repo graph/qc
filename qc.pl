@@ -463,8 +463,10 @@ sub compileCPP {
 			# include file thats only in the source but not header
 			push @$gen, "#include $1";
 		} elsif($line =~ /^#/){
+			# header macro
+		} elsif($line =~ /^$(.*)$/){
 			# allow pasthrough custom macros
-			push @$gen, $line;
+			push @$gen, "#" . $1;
 		}
 		
 		else {
@@ -525,7 +527,7 @@ sub compileH {
 		} elsif($line =~ m/^\s*include\s*(<.*>)\s*$/){
 			# for includeing files
 			push @$gen, "#include $1"
-		}elsif($line =~ m/^\s*endclass/){
+		} elsif($line =~ m/^\s*endclass/){
 			$function_prepend = "";
 			$inClass = 0;
 			push @$gen, "};";
@@ -537,6 +539,7 @@ sub compileH {
 		} elsif($line =~ /^#/){
 			# allow pasthrough custom macros
 			# dont print them in header
+			push @$gen, $line;
 		}
 		
 		else {
