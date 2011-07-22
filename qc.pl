@@ -79,7 +79,7 @@ sub saveFile {
 		print $fh "\n";
 	}
 	close $fh;
-	print "Saved $file ...";
+	print "Saved $file ...\n";
 }
 sub OKToRemake {
 	my ($file) = @_;
@@ -356,9 +356,12 @@ sub PreFile {
 	}
 	return 0 if(!$pass);
 	if($type eq "qc"){
-		print "Preprocessing qc file ...\n";
+		print "Preprocessing qc file $dir/$cpp ...\n";
 		$outdir = getQCDir($dir);
-		print "qcdir = $outdir\n";
+		if(!$outdir){
+			print "Could not find suitable dir for qc output files";
+			return -1;
+		}
 		return doqc("$dir/$cpp", $outdir);
 	}
 	$lines = OKToRemake("$dir/$hfile");
