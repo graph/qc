@@ -406,15 +406,15 @@ sub compileCPP {
 		}
 		if(!$inEnum && $line =~ m/(\s*)if\s(.*)$/){
 			push @$gen, $1 . "if ($2) {";
-		} elsif ($line =~ m/(\s*)while\s(.*)$/){
+		} elsif ($line =~ m/^(\s*)while\s(.*)$/){
 			push @$gen, $1 . "while ($2) {";
-		} elsif ($line =~ m/(\s*)for\s(.*)$/){
+		} elsif ($line =~ m/^(\s*)for\s(.*)$/){
 			push @$gen, $1 . "for ($2) {";
-		} elsif($line =~ m/(\s*)switch\s+(.*)\s*$/){
+		} elsif($line =~ m/^(\s*)switch\s+(.*)\s*$/){
 			push @$gen, $1 . "switch ($2) {";
-		} elsif($line =~ m/(\s*)case\s+(.*):\s*$/ or $line =~ m/(\s*)case\s+(.*)\s*$/){
+		} elsif($line =~ m/^(\s*)case\s+(.*):\s*$/ or $line =~ m/(\s*)case\s+(.*)\s*$/){
 			push @$gen, $1 . "case $2:";
-		} elsif($line =~ m/(\s*)default\s*$/ or $line =~ m/(\s*)default:\s*$/){
+		} elsif($line =~ m/^(\s*)default\s*$/ or $line =~ m/(\s*)default:\s*$/){
 			push @$gen, $1 . "default:";
 		} elsif($line =~ m/^(\s*)end\s*$/){
 			if($inEnum) {
@@ -461,7 +461,7 @@ sub compileCPP {
 			push @$gen, "#include $1";
 		} elsif($line =~ /^#/){
 			# header macro
-		} elsif($line =~ /^$(.*)$/){
+		} elsif($line =~ /^\$(.*)$/){
 			# allow pasthrough custom macros
 			push @$gen, "#" . $1;
 		}
@@ -537,6 +537,8 @@ sub compileH {
 			# allow pasthrough custom macros
 			# dont print them in header
 			push @$gen, $line;
+		} elsif($line =~ /^\$(.*)$/){
+			# only in cpp macro
 		}
 		
 		else {
