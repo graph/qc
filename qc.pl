@@ -191,12 +191,13 @@ sub qcAll {
 			# auto put public :)
 			$gl = "class $1 : public $2 {\npublic:\ntypedef $2 super;";
 			my @a;
-			@a = split("\n", $gl);
+			@a = split(/\n/, $gl);
 			push @$gen, @a;
 		}elsif ($l =~ m/^#pragma\s+qc\s+class\s+(.*)$/){
 			$gl = $1;
 			$gl = "class $gl {\npublic:";
 			my @a;
+			@a = split(/\n/, $gl);
 			push @$gen, @a;
 		} elsif ($l =~ m/^#pragma\s+qc\s+endc/){
 			$gl = "};";
