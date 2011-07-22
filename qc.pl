@@ -45,7 +45,7 @@ sub sameFileContents {
 	my ($contents, $file) = @_;
 	my $fcontents;
 	$fcontents = loadFile($file);
-	if(!$fcontents) { 
+	if(!$fcontents) {
 		return 0;
 	}
 	return equalArrays($contents, $fcontents);
@@ -189,11 +189,13 @@ sub qcAll {
 		
 		elsif($l =~ m/^#pragma\s+qc\s+class\s+(\S+)\s*\:\s*(\S+)\s*$/){
 			# auto put public :)
-			$gl = "class $1 : public $2 {\npublic:\ntypedef $2 super;\n";
+			$gl = "class $1 : public $2 {\npublic:\ntypedef $2 super;";
+			$gl = split("\n", $gl);
 			push @$gen, $gl;
 		}elsif ($l =~ m/^#pragma\s+qc\s+class\s+(.*)$/){
            $gl = $1;
            $gl = "class $gl {\npublic:";
+           $gl = split("\n", $gl);
            push @$gen, $gl;
         } elsif ($l =~ m/^#pragma\s+qc\s+endc/){
             $gl = "};";
@@ -218,18 +220,15 @@ sub qcAll {
 		#dont do anything
 		return 1;
 	}
-
-	my $hfh;
-	open ($hfh, ">$hfile") or die "Could not open $hfile for outputing";
-	my($i);
-	
-
-	for($i = 0; $i < @$gen; $i++){
-		print $hfh $$gen[$i] . "\n";
-
+	if(!sameFileContents($gen, $hfile)){
+		print ("$hfile changed\n");
+		saveFile($gen, $hfile);
+		if(!sameFileContents($gen, $hfile)){
+			print "error::!!!! saved file but its different??";
+		}
+	} else {
+		print "Error: !!! previous thing failed\n";
 	}
-    print $hfh "\n";
-    close ($hfh);
 	return 1;
 }
 
@@ -263,24 +262,26 @@ sub dofile {
 	my $hfile_lines;
 	$hfile_lines = loadFile($hfile);
 
-	my $hfh;
-	open ($hfh, ">$hfile") or die "Could not open $hfile for outputing";
 	my($i);
-	
 
 	
 	my $output = [];
 	
 	for($i = 0; $i <= $$lines[0]; $i++){
-		print $hfh $$hfile_lines[$i] . "\n";
+		push @$output, $$hfile_lines[$i];
+		#print $hfh $$hfile_lines[$i] . "\n";
 
 	}
 	for($i =0; $i < @$list; $i++){
-		print $hfh $$list[$i] . ";\n";
+		push @$output, $$list[$i] . ";";
+		#print $hfh $$list[$i] . ";\n";
 	}
 	for($i = $$lines[1]; $i < @$hfile_lines; $i++){
-		print $hfh $$hfile_lines[$i] . "\n";
-
+		push @$output, $$hfile_lines[$i];
+		#print $hfh $$hfile_lines[$i] . "\n";
+	}
+	if(!sameFileContents($output, $hfile)){
+		saveFile($output, $hfile);
 	}
 }
 
@@ -331,15 +332,6 @@ sub PreFile {
 		$type = $3;
 		$cpp = "$name.$type";
 		$hfile = "$name.h";
-		
-		$lines = OKToRemake("$dir/$hfile");
-		if($lines){
-			dofile("$dir/$cpp", "$dir/$hfile");
-		}
-        $lines = isQCAll("$dir/$hfile");
-        if($lines){
-            qcAll("$dir/$cpp", "$dir/$hfile");
-        }
 	} elsif ($file =~ m/^([^\/]+)\.([^\.]+)$/){
 		$dir = ".";
 		$name = $1;
