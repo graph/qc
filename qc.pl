@@ -598,7 +598,7 @@ sub compileH {
 			} elsif($inEnum){
 				$put = "$line,";
 				$put = replacements($put, $searchStrings, $replaceStrings);
-				push @$gen, ;
+				push @$gen, $put;
 			} elsif($inClass && $braceLevel == 0){
 				$put = "$line" . ";";
 				$put = replacements($put, $searchStrings, $replaceStrings);
