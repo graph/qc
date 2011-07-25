@@ -369,6 +369,19 @@ sub PreFile {
 	
 }
 
+sub replacements {
+	my ($string, $search, $replace) = @_;
+	
+	my $i;
+	for($i = 0; $i < @$search; $i++){
+		my $s;
+		my $r;
+		$s = $$search[$i];
+		$r = $$replace[$i];
+		$string =~ s/$s/$r/g;
+	}
+	return $string;
+}
 sub compileCPP {
 	my ($code, $file) = @_;
 	my $i;
@@ -382,6 +395,10 @@ sub compileCPP {
 	my $fileName;
 	my $dir;
 	my $ext;
+	my $put;
+	
+	my $replaceStrings = [];
+	my $searchStrings = [];
 	
 	($fileName, $dir, $ext) = fileparse($file, "\.[^\.]+\$");
 	
@@ -405,15 +422,25 @@ sub compileCPP {
 			$genSize = @$gen;
 		}
 		if(!$inEnum && $line =~ m/(\s*)if\s(.*)$/){
-			push @$gen, $1 . "if ($2) {";
+			$put = $1 . "if ($2) {";
+			$put = replacements($put, $searchStrings, $replaceStrings);
+			push @$gen, $put;
 		} elsif ($line =~ m/^(\s*)while\s(.*)$/){
-			push @$gen, $1 . "while ($2) {";
+			$put = $1 . "while ($2) {";
+			$put = replacements($put, $searchStrings, $replaceStrings);
+			push @$gen, $put;
 		} elsif ($line =~ m/^(\s*)for\s(.*)$/){
-			push @$gen, $1 . "for ($2) {";
+			$put = $1 . "for ($2) {";
+			$put = replacements($put, $searchStrings, $replaceStrings);
+			push @$gen, $put;
 		} elsif($line =~ m/^(\s*)switch\s+(.*)\s*$/){
-			push @$gen, $1 . "switch ($2) {";
+			$put = $1 . "switch ($2) {";
+			$put = replacements($put, $searchStrings, $replaceStrings);
+			push @$gen, $put;
 		} elsif($line =~ m/^(\s*)case\s+(.*):\s*$/ or $line =~ m/(\s*)case\s+(.*)\s*$/){
-			push @$gen, $1 . "case $2:";
+			$put = $1 . "case $2:";
+			$put = replacements($put, $searchStrings, $replaceStrings);
+			push @$gen, $put;
 		} elsif($line =~ m/^(\s*)default\s*$/ or $line =~ m/(\s*)default:\s*$/){
 			push @$gen, $1 . "default:";
 		} elsif($line =~ m/^(\s*)end\s*$/){
@@ -426,11 +453,17 @@ sub compileCPP {
 			push @$gen, "$1 } else {"; 
 		} elsif(!$inEnum && $line =~ m/(.*)\s+(\S+\s*\(.*\))\s*\{\s*$/){
 			# its a function
-			push @$gen, "$1 $function_prepend" . "$2 {";
+			my $put;
+			$put = "$1 $function_prepend" . "$2 {";
+			$put = replacements($put, $searchStrings, $replaceStrings);
+			push @$gen, $put;
 			$braceLevel++;
 		} elsif($line =~ m/(.*)\s+([^\(\)\s]+)\s*\{\s*$/) {
 			# its a function with ()
-			push @$gen, "$1 $function_prepend" . "$2 () {";
+			my $put;
+			$put = "$1 $function_prepend" . "$2 () {";
+			$put = replacements($put, $searchStrings, $replaceStrings);
+			push @$gen, $put;
 			$braceLevel++;
 		} elsif($line =~ m/\{\s*/){
 			push @$gen, $line;
@@ -459,21 +492,25 @@ sub compileCPP {
 		} elsif($line =~ /^\s*require\s*(".*")\s*$/){
 			# include file thats only in the source but not header
 			push @$gen, "#include $1";
+		} elsif($line =~ /^\$replace\s+(.*?)\s*=>\s*(.*?)\s*$/){
+			push @$replaceStrings, $2;
+			push @$searchStrings, $1;
 		} elsif($line =~ /^#/){
 			# header macro
 		} elsif($line =~ /^\$(.*)$/){
 			# allow pasthrough custom macros
 			push @$gen, "#" . $1;
-		}
-		
+		} 
 		else {
 			if(($line =~ m/^\s*$/))
 			{
 				push @$gen, "$line";
 			} else {
 				if(!$inClass){
+					$line = replacements($line, $searchStrings, $replaceStrings);
 					push @$gen, "$line" . ";"; # add a semicolor :)
 				} elsif($braceLevel > 0){
+					$line = replacements($line, $searchStrings, $replaceStrings);
 					push @$gen, "$line" . ";";
 				}
 			}
@@ -489,6 +526,9 @@ sub compileH {
 	my $braceLevel;
 	my $inClass;
 	my $inEnum;
+	my $put;
+	my $searchStrings=[];
+	my $replaceStrings=[];
 	$braceLevel = 0;
 	$inClass = 0;
 	$inEnum = 0;
@@ -506,17 +546,25 @@ sub compileH {
 			}
 		}elsif($line =~ m/(.*)\s+(\S+\s*\(.*\))\s*\{\s*$/){
 			# its a function
-			push @$gen, "$1 " . "$2 ;";
+			$put = "$1 " . "$2;";
+			$put = replacements($put, $searchStrings, $replaceStrings);
+			push @$gen, $put;
 			$braceLevel++;
 		} elsif($line =~ m/(.*)\s+([^\(\)\s]+)\s*\{\s*$/) {
 			# its a function with ()
-			push @$gen, "$1 $function_prepend" . "$2 () ;";
+			$put = "$1 $function_prepend" . "$2 ();";
+			$put = replacements($put, $searchStrings, $replaceStrings);
+			push @$gen, $put;
 			$braceLevel++;
 		} elsif($line =~ m/^\s*class\s+(\S+)\s*:\s*(\S+)$/){
-			push @$gen, "class $1 : public $2 {public: typedef $2 super;";
+			$put = "class $1 : public $2 {public: typedef $2 super;";
+			$put = replacements($put, $searchStrings, $replaceStrings);
+			push @$gen, $put;
 			$inClass = 1;
 		} elsif($line =~ m/^\s*class\s+(\S+)\s*$/){
-			push @$gen, "class $1 {public:";
+			$put = "class $1 {public:";
+			$put = replacements($put, $searchStrings, $replaceStrings);
+			push @$gen, $put;
 			$inClass = 1;
 		} elsif($line =~ m/^\s*include\s*(".*")\s*$/){
 			# for includeing files
@@ -533,6 +581,9 @@ sub compileH {
 		} elsif($line =~ m/^\s*enum\s*/){
 			$inEnum = 1;
 			push @$gen, "enum {";
+		} elsif($line =~ /^\$replace\s+(.*?)\s*=>\s*(.*?)\s*$/){
+			push @$replaceStrings, $2;
+			push @$searchStrings, $1;
 		} elsif($line =~ /^#/){
 			# allow pasthrough custom macros
 			# dont print them in header
@@ -545,9 +596,13 @@ sub compileH {
 			# nothing to do here in header file
 			if($line =~ m/^\s*$/){
 			} elsif($inEnum){
-				push @$gen, "$line,";
+				$put = "$line,";
+				$put = replacements($put, $searchStrings, $replaceStrings);
+				push @$gen, ;
 			} elsif($inClass && $braceLevel == 0){
-				push @$gen, "$line" . ";";
+				$put = "$line" . ";";
+				$put = replacements($put, $searchStrings, $replaceStrings);
+				push @$gen, $put;
 			}
 		}
 	}
