@@ -378,7 +378,11 @@ sub replacements {
 		my $r;
 		$s = $$search[$i];
 		$r = $$replace[$i];
-		$string =~ s/$s/$r/g;
+		my $e;
+		$e = "s/$s/$r/g;";
+		$e = '$string =~ ' . $e;
+		eval $e;
+		#$string =~ s/$s/$r/g;
 	}
 	return $string;
 }
