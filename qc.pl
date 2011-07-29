@@ -425,7 +425,7 @@ sub compileCPP {
 			push @$gen, "#" . "line $lineNumber \"$fullFileName\"";
 			$genSize = @$gen;
 		}
-		if(!$inEnum && $line =~ m/(\s*)if\s(.*)$/){
+		if(!$inEnum && $line =~ m/^(\s*)if\s(.*)$/){
 			$put = $1 . "if ($2) {";
 			$put = replacements($put, $searchStrings, $replaceStrings);
 			push @$gen, $put;
