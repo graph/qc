@@ -441,7 +441,7 @@ sub compileCPP {
 			$put = $1 . "switch ($2) {";
 			$put = replacements($put, $searchStrings, $replaceStrings);
 			push @$gen, $put;
-		} elsif($line =~ m/^(\s*)case\s+(.*):\s*$/ or $line =~ m/(\s*)case\s+(.*)\s*$/){
+		} elsif($line =~ m/^(\s*)case\s+(.*):\s*$/ or $line =~ m/^(\s*)case\s+(.*)\s*$/){
 			$put = $1 . "case $2:";
 			$put = replacements($put, $searchStrings, $replaceStrings);
 			push @$gen, $put;
