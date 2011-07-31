@@ -425,25 +425,22 @@ sub compileCPP {
 			push @$gen, "#" . "line $lineNumber \"$fullFileName\"";
 			$genSize = @$gen;
 		}
+		$line = replacements($line, $searchStrings, $replaceStrings);
+
 		if(!$inEnum && $line =~ m/^(\s*)if\s(.*)$/){
 			$put = $1 . "if ($2) {";
-			$put = replacements($put, $searchStrings, $replaceStrings);
 			push @$gen, $put;
 		} elsif ($line =~ m/^(\s*)while\s(.*)$/){
 			$put = $1 . "while ($2) {";
-			$put = replacements($put, $searchStrings, $replaceStrings);
 			push @$gen, $put;
 		} elsif ($line =~ m/^(\s*)for\s(.*)$/){
 			$put = $1 . "for ($2) {";
-			$put = replacements($put, $searchStrings, $replaceStrings);
 			push @$gen, $put;
 		} elsif($line =~ m/^(\s*)switch\s+(.*)\s*$/){
 			$put = $1 . "switch ($2) {";
-			$put = replacements($put, $searchStrings, $replaceStrings);
 			push @$gen, $put;
 		} elsif($line =~ m/^(\s*)case\s+(.*):\s*$/ or $line =~ m/^(\s*)case\s+(.*)\s*$/){
 			$put = $1 . "case $2:";
-			$put = replacements($put, $searchStrings, $replaceStrings);
 			push @$gen, $put;
 		} elsif($line =~ m/^(\s*)default\s*$/ or $line =~ m/(\s*)default:\s*$/){
 			push @$gen, $1 . "default:";
@@ -459,14 +456,12 @@ sub compileCPP {
 			# its a function
 			my $put;
 			$put = "$1 $function_prepend" . "$2 {";
-			$put = replacements($put, $searchStrings, $replaceStrings);
 			push @$gen, $put;
 			$braceLevel++;
 		} elsif($line =~ m/^([^#].+)\s+([^\(\)\s]+)\s*\{\s*$/) {
 			# its a function with ()
 			my $put;
 			$put = "$1 $function_prepend" . "$2 () {";
-			$put = replacements($put, $searchStrings, $replaceStrings);
 			push @$gen, $put;
 			$braceLevel++;
 		} elsif($line =~ m/^\s*\{\s*$/){
@@ -511,10 +506,8 @@ sub compileCPP {
 				push @$gen, "$line";
 			} else {
 				if(!$inClass){
-					$line = replacements($line, $searchStrings, $replaceStrings);
 					push @$gen, "$line" . ";"; # add a semicolor :)
 				} elsif($braceLevel > 0){
-					$line = replacements($line, $searchStrings, $replaceStrings);
 					push @$gen, "$line" . ";";
 				}
 			}
@@ -541,6 +534,8 @@ sub compileH {
 	for($i = 0; $i < @$code; $i++){
 		my $line;
 		$line = $$code[$i];
+		$line = replacements($line, $searchStrings, $replaceStrings);
+
 		if($line =~ m/^\s*end\s*$/){
 			if($inEnum){
 				push @$gen, "// enum ended";
@@ -551,23 +546,19 @@ sub compileH {
 		}elsif($line =~ m/(.*)\s+(\S+\s*\(.*\))\s*\{\s*$/){
 			# its a function
 			$put = "$1 " . "$2;";
-			$put = replacements($put, $searchStrings, $replaceStrings);
 			push @$gen, $put;
 			$braceLevel++;
 		} elsif($line =~ m/^([^#]*)\s+([^\(\)\s]+)\s*\{\s*$/) {
 			# its a function with ()
 			$put = "$1 $function_prepend" . "$2 ();";
-			$put = replacements($put, $searchStrings, $replaceStrings);
 			push @$gen, $put;
 			$braceLevel++;
 		} elsif($line =~ m/^\s*class\s+(\S+)\s*:\s*(\S+)$/){
 			$put = "class $1 : public $2 {public: typedef $2 super;";
-			$put = replacements($put, $searchStrings, $replaceStrings);
 			push @$gen, $put;
 			$inClass = 1;
 		} elsif($line =~ m/^\s*class\s+(\S+)\s*$/){
 			$put = "class $1 {public:";
-			$put = replacements($put, $searchStrings, $replaceStrings);
 			push @$gen, $put;
 			$inClass = 1;
 		} elsif($line =~ m/^\s*include\s*(".*")\s*$/){
@@ -601,11 +592,9 @@ sub compileH {
 			if($line =~ m/^\s*$/){
 			} elsif($inEnum){
 				$put = "$line,";
-				$put = replacements($put, $searchStrings, $replaceStrings);
 				push @$gen, $put;
 			} elsif($inClass && $braceLevel == 0){
 				$put = "$line" . ";";
-				$put = replacements($put, $searchStrings, $replaceStrings);
 				push @$gen, $put;
 			}
 		}
