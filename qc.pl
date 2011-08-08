@@ -301,7 +301,7 @@ sub getQCDir {
 sub doqc {
 	my ($file, $outdir) = @_;
 	my ($cpp, $h);
-	my ($name, $dir, $ext) = fileparse($file, "\.[^\.]+\$");
+	my ($name, $dir, $ext) = fileparse($file, "\\.[^\\/]+\$");
 	my $hcode;
 	my $cppcode;
 	my $code;
@@ -328,28 +328,24 @@ sub PreFile {
 	my $pass;
 	
 	$pass = 1;
-	if($file =~ m/^(.*)\/(.*)\.([^\.]+)$/){
+	if($file =~ m/^(.*)\/([^\.]*)\.(.+)$/){
 		$dir = $1;
 		$name = $2;
 		$type = $3;
 		$cpp = "$name.$type";
 		$hfile = "$name.h";
-	} elsif ($file =~ m/^([^\/]+)\.([^\.]+)$/){
+	} elsif ($file =~ m/^([^\/\.]+)\.(.+)$/){
 		$dir = ".";
 		$name = $1;
 		$type = $2;
 		$cpp = "$name.$type";
 		$hfile = "$name.h";
-		
-		#TODO: Use a pass var instaead of duplicating above
-
-			
 	} else {
 		print "Could not match file $file\n";
 		$pass = 0;
 	}
 	return 0 if(!$pass);
-	if($type eq "qc"){
+	if($type eq "qc" or $type eq "qc.h"){
 		print "Preprocessing qc file $dir/$cpp ...\n";
 		$outdir = getQCDir($dir);
 		if(!$outdir){
@@ -608,6 +604,7 @@ my $filetypes = [];
 my $doall=0;
 push @$filetypes, "cpp";
 push @$filetypes, "qc";
+push @$filetypes, "qc.h";
 
 for($i = 0; $i < @ARGV; $i++){
 	if($ARGV[$i] eq "-f"){
