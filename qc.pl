@@ -323,7 +323,7 @@ sub doqc {
 	$changed = 0;
 	$code = loadFile($file);
 	
-	$hcode = compileH($code);
+	$hcode = compileH($code, $file);
 	$cppcode = compileCPP($code, $file);
 	if(!sameFileContents($hcode, "$outdir/$name.h")){
 		saveFile($hcode, "$outdir/$name.h");
@@ -531,7 +531,7 @@ sub compileCPP {
 	return $gen;
 }
 sub compileH {
-	my ($code) = @_;
+	my ($code, $file) = @_;
 	my $i;
 	my $gen = [];
 	my $function_prepend="";
@@ -541,16 +541,31 @@ sub compileH {
 	my $put;
 	my $searchStrings=[];
 	my $replaceStrings=[];
+	
+	my $lineNumber;
+	my $genSize;
+	
 	$braceLevel = 0;
 	$inClass = 0;
 	$inEnum = 0;
 	push @$gen, "#pragma once";
-	
+	my $fullFileName;
+	$fullFileName = abspath($file);
+
+	$lineNumber = 0;
+	$genSize = -1;
 	for($i = 0; $i < @$code; $i++){
 		my $line;
 		$line = $$code[$i];
 		$line = replacements($line, $searchStrings, $replaceStrings);
-
+		
+		$lineNumber++;
+		$genSize++;
+		if(@$gen != $genSize){
+			push @$gen, "#" . "line $lineNumber \"$fullFileName\"";
+			$genSize = @$gen;
+		}
+		
 		if($line =~ m/^\s*end\s*$/){
 			if($inEnum){
 				push @$gen, "// enum ended";
