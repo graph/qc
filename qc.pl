@@ -307,10 +307,14 @@ sub getQCDir {
 		$startdir = dirname($startdir);
 	}
 }
+sub qcFileParse {
+	my ($file) = @_;
+	return fileparse($file, "\\.[^\\/]+\$");
+}
 sub doqc {
 	my ($file, $outdir) = @_;
 	my ($cpp, $h);
-	my ($name, $dir, $ext) = fileparse($file, "\\.[^\\/]+\$");
+	my ($name, $dir, $ext) = qcFileParse($file);
 	my $hcode;
 	my $cppcode;
 	my $code;
@@ -415,7 +419,7 @@ sub compileCPP {
 	my $replaceStrings = [];
 	my $searchStrings = [];
 	
-	($fileName, $dir, $ext) = fileparse($file, "\.[^\.]+\$");
+	($fileName, $dir, $ext) = qcFileParse($file);
 	
 	$braceLevel = 0;
 	$inClass = 0;
