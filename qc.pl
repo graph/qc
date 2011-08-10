@@ -6,6 +6,9 @@ use File::Spec;
 # reduce repetitive stuff in c++
 #quick C = qc
 our $outdir;
+our $errorOnChanges;
+
+$errorOnChanges = 0;
 
 sub abspath {
 	my ($path) = @_;
@@ -136,7 +139,8 @@ sub qcAll {
     my $gl;
 	my $list = [];
 	my $i;
-    
+    my $changed;
+	$changed = 0;
 
     my $purecopy;
     $lines = loadFile($cppfile);
@@ -228,15 +232,18 @@ sub qcAll {
 		if(!sameFileContents($gen, $hfile)){
 			print "error::!!!! saved file but its different??";
 		}
+		$changed = 1;
 	} else {
 		print "Error: !!! previous thing failed\n";
 	}
-	return 1;
+	return $changed;
 }
 
 sub dofile {
 	my ($cppfile, $hfile) = @_;
 	my $lines;
+	my $changed;
+	$changed = 0;
 	print "Processing $cppfile/$hfile\n";
 	$lines = OKToRemake($hfile);
 	my $cfh;
@@ -284,7 +291,9 @@ sub dofile {
 	}
 	if(!sameFileContents($output, $hfile)){
 		saveFile($output, $hfile);
+		$changed = 1;
 	}
+	return $changed;
 }
 
 sub getQCDir {
@@ -305,18 +314,23 @@ sub doqc {
 	my $hcode;
 	my $cppcode;
 	my $code;
+	my $changed;
+	
+	$changed = 0;
 	$code = loadFile($file);
 	
 	$hcode = compileH($code);
 	$cppcode = compileCPP($code, $file);
 	if(!sameFileContents($hcode, "$outdir/$name.h")){
 		saveFile($hcode, "$outdir/$name.h");
+		$changed = 1;
 	}
 	if(!sameFileContents($cppcode, "$outdir/$name.cpp")){
 		saveFile($cppcode, "$outdir/$name.cpp");
+		$changed = 1;
 	}
 	
-	return 0;
+	return $changed;
 }
 
 sub PreFile {
@@ -356,12 +370,13 @@ sub PreFile {
 	}
 	$lines = OKToRemake("$dir/$hfile");
 	if($lines){
-		dofile("$dir/$cpp", "$dir/$hfile");
+		return dofile("$dir/$cpp", "$dir/$hfile");
 	}
 	$lines = isQCAll("$dir/$hfile");
 	if($lines){
-		qcAll("$dir/$cpp", "$dir/$hfile");
+		return qcAll("$dir/$cpp", "$dir/$hfile");
 	}
+	return 0;
 	
 }
 
@@ -614,9 +629,14 @@ for($i = 0; $i < @ARGV; $i++){
 	if($ARGV[$i] eq "--all" or $ARGV[$i] eq "-a"){
 		$doall = 1;
 	}
+	if($ARGV[$i] eq "-e"){
+		$errorOnChanges = 1;
+	}
 
 }
 $file = $ARGV[0];
+my $changed;
+$changed = 0;
 if($doall){
 	# do all of em
 	my $files;
@@ -625,9 +645,16 @@ if($doall){
 		$files = AllFiles($$filetypes[$type_n]);
 		my $i;
 		for($i = 0; $i < @$files; $i++){
-			PreFile($$files[$i]);
+			if(PreFile($$files[$i])){
+				$changed = 1;
+			}
 		}
 	}
 } else {
-	PreFile($file);
+	$changed = PreFile($file);
+}
+
+if($changed && $errorOnChanges){
+	print "Files have been modified; giving fake error\n";
+	exit(1);
 }
