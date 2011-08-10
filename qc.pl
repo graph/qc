@@ -76,7 +76,10 @@ sub saveFile {
 	my $fh;
 	my $r;
 	$r = open $fh, ">$file";
-	if(!$r) { return 0; }
+	if(!$r) { 
+		print "could not save $file\n"; 
+		return 0; 
+	}
 	for($i = 0; $i < @$lines; $i++){
 		print $fh $$lines[$i];
 		print $fh "\n";
@@ -220,12 +223,6 @@ sub qcAll {
         
 	}
 	
-	my $hfilelist;
-	$hfilelist = loadFile($hfile);
-	if(equalArrays($gen, $hfilelist)){
-		#dont do anything
-		return 1;
-	}
 	if(!sameFileContents($gen, $hfile)){
 		print ("$hfile changed\n");
 		saveFile($gen, $hfile);
@@ -665,6 +662,7 @@ if($doall){
 		my $i;
 		for($i = 0; $i < @$files; $i++){
 			if(PreFile($$files[$i])){
+				print "change is 1 " . $$files[$i] . "\n";
 				$changed = 1;
 			}
 		}
