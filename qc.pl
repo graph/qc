@@ -580,6 +580,9 @@ sub compileH {
 			$put = "$1 $function_prepend" . "$2 ();";
 			push @$gen, $put;
 			$braceLevel++;
+		} elsif($line =~ m/^\s*class\s+(\S+)\s*;\s*$/){
+			$put = "class $1;";
+			push @$gen, $put;
 		} elsif($line =~ m/^\s*class\s+(\S+)\s*:\s*(\S+)$/){
 			$put = "class $1 : public $2 {public: typedef $2 super;";
 			push @$gen, $put;
