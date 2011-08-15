@@ -360,7 +360,7 @@ sub PreFile {
 		$pass = 0;
 	}
 	return 0 if(!$pass);
-	if($type eq "qc" or $type eq "qc.h"){
+	if($type eq "qc" or $type eq "qc.h" or $type eq "qc.cpp"){
 		print "Preprocessing qc file $dir/$cpp ...\n";
 		$outdir = getQCDir($dir);
 		if(!$outdir){
@@ -511,7 +511,9 @@ sub compileCPP {
 		} elsif($line =~ /^\$(.*)$/){
 			# allow pasthrough custom macros
 			push @$gen, "#" . $1;
-		} 
+		} elsif($line =~ /^%(.*)$/){
+			# only in header
+		}
 		else {
 			if(($line =~ m/^\s*$/))
 			{
@@ -615,6 +617,9 @@ sub compileH {
 			push @$gen, $line;
 		} elsif($line =~ /^\$(.*)$/){
 			# only in cpp macro
+		} elsif($line =~ /^%(.*)$/){
+			# only in header
+			push @$gen, $1
 		}
 		
 		else {
@@ -639,6 +644,7 @@ my $doall=0;
 push @$filetypes, "cpp";
 push @$filetypes, "qc";
 push @$filetypes, "qc.h";
+push @$filetypes, "qc.cpp";
 
 for($i = 0; $i < @ARGV; $i++){
 	if($ARGV[$i] eq "-f"){
