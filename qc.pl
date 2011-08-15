@@ -619,7 +619,7 @@ sub compileH {
 			# only in cpp macro
 		} elsif($line =~ /^%(.*)$/){
 			# only in header
-			push @$gen, $1
+			push @$gen, $1 . ";";
 		}
 		
 		else {
