@@ -385,7 +385,7 @@ sub replacements {
 	my ($string, $search, $replace) = @_;
 	
 	my $i;
-	for($i = 0; $i < @$search; $i++){
+	for($i = @$search-1; $i >= 0; $i--){
 		my $s;
 		my $r;
 		$s = $$search[$i];
@@ -415,6 +415,7 @@ sub compileCPP {
 	
 	my $replaceStrings = [];
 	my $searchStrings = [];
+	my $lineBuffer = [];
 	
 	($fileName, $dir, $ext) = qcFileParse($file);
 	
@@ -428,17 +429,30 @@ sub compileCPP {
 	$fullFileName = abspath($file);
 	push @$gen, "#" . "line 1 \"$fullFileName\"";
 	$genSize = 0;
-	for($i = 0; $i < @$code; $i++){
+	for($i = 0; $i < @$code || @$lineBuffer > 0; $i++){
 		my $line;
-		$line = $$code[$i];
-		$lineNumber++;
-		$genSize++;
-		if(@$gen != $genSize){
+		if(@$lineBuffer > 0){
+			$lineNumber = $i;
+			$i--;
 			push @$gen, "#" . "line $lineNumber \"$fullFileName\"";
-			$genSize = @$gen;
+			$line = pop @$lineBuffer;
+		} else {
+			$line = $$code[$i];
+			$lineNumber = $i+1;
+			$genSize++;
+			if(@$gen != $genSize){
+				push @$gen, "#" . "line $lineNumber \"$fullFileName\"";
+				$genSize = @$gen;
+			}
 		}
 		$line = replacements($line, $searchStrings, $replaceStrings);
-
+		if($line =~ m/\n/){
+			my @array;
+			@array = split(/\n/, $line);
+			@array = reverse(@array);
+			push @$lineBuffer, @array;
+			next;
+		}
 		if(!$inEnum && $line =~ m/^(\s*)if\s(.*)$/){
 			$put = $1 . "if ($2) {";
 			push @$gen, $put;
@@ -540,6 +554,7 @@ sub compileH {
 	my $put;
 	my $searchStrings=[];
 	my $replaceStrings=[];
+	my $lineBuffer = [];
 	
 	my $lineNumber;
 	my $genSize;
@@ -553,16 +568,31 @@ sub compileH {
 
 	$lineNumber = 0;
 	$genSize = -1;
-	for($i = 0; $i < @$code; $i++){
+	for($i = 0; $i < @$code || @$lineBuffer > 0; $i++){
 		my $line;
-		$line = $$code[$i];
-		$line = replacements($line, $searchStrings, $replaceStrings);
-		
-		$lineNumber++;
-		$genSize++;
-		if(@$gen != $genSize){
+
+		if(@$lineBuffer > 0){
+			$lineNumber = $i;
+			$i--;
 			push @$gen, "#" . "line $lineNumber \"$fullFileName\"";
-			$genSize = @$gen;
+			$line = pop @$lineBuffer;
+		} else {
+			$line = $$code[$i];
+			$lineNumber = $i+1;
+			$genSize++;
+			if(@$gen != $genSize){
+				push @$gen, "#" . "line $lineNumber \"$fullFileName\"";
+				$genSize = @$gen;
+			}
+		}
+		
+		$line = replacements($line, $searchStrings, $replaceStrings);
+		if($line =~ m/\n/){
+			my @array;
+			@array = split(/\n/, $line);
+			@array = reverse(@array);
+			push @$lineBuffer, @array;
+			next;
 		}
 		
 		if($line =~ m/^\s*end\s*$/){
