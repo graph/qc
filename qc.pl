@@ -445,7 +445,9 @@ sub compileCPP {
 				$genSize = @$gen;
 			}
 		}
-		$line = replacements($line, $searchStrings, $replaceStrings);
+		if(!($line =~ /^\s*\$replace\s+/)){
+			$line = replacements($line, $searchStrings, $replaceStrings);
+		}
 		if($line =~ m/\n/){
 			my @array;
 			@array = split(/\n/, $line);
@@ -586,7 +588,9 @@ sub compileH {
 			}
 		}
 		
-		$line = replacements($line, $searchStrings, $replaceStrings);
+		if(!($line =~ /^\s*\$replace\s+/)){
+			$line = replacements($line, $searchStrings, $replaceStrings);
+		}
 		if($line =~ m/\n/){
 			my @array;
 			@array = split(/\n/, $line);
