@@ -498,6 +498,8 @@ sub compileCPP {
 		} elsif($line =~ m/^(\s*)\}\s*$/){
 			push @$gen, $1 . "}";
 			$braceLevel--;
+		}  elsif($line =~ m/^\s*class\s+(\S+)\s*;\s*$/){ # class aoeu;
+			push @$gen, "";
 		} elsif($line =~ m/^\s*class\s+(\S+)\s*:\s*(\S+)$/){
 			$function_prepend = $1 . "::";
 			$inClass = 1;
