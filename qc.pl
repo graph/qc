@@ -296,13 +296,16 @@ sub dofile {
 sub getQCDir {
 	my ($startdir) = @_;
 	$startdir = abspath($startdir);
-	
 	while ($startdir && length($startdir) > 0){	
 		if(-d "$startdir/qcout"){
 			return "$startdir/qcout";
 		}
 		$startdir = dirname($startdir);
+		if($startdir eq "/"){
+			last;
+		}
 	}
+	return 0;
 }
 sub qcFileParse {
 	my ($file) = @_;

@@ -8,4 +8,3 @@ int x;
 int y;
 int sum();
 };
-
