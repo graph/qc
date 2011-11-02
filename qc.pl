@@ -611,7 +611,7 @@ sub compileH {
 				push @$gen, "};";
 				$inEnum = 0;
 			}
-		}elsif($line =~ m/(.*)\s+(\S+\s*\(.*\))\s*\{\s*$/){
+		} elsif($line =~ m/(.*)\s+(\S+\s*\(.*\).*?)\{\s*$/){
 			# its a function
 			$put = "$1 " . "$2;";
 			push @$gen, $put;
