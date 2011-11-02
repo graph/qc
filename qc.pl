@@ -483,7 +483,7 @@ sub compileCPP {
 			}
 		} elsif(!$inEnum && $line =~ m/^(\s*)else(\s*)$/){
 			push @$gen, "$1 } else {"; 
-		} elsif(!$inEnum && $line =~ m/^([^#].+)\s+(\S+\s*\(.*\))\s*\{\s*$/){
+		} elsif(!$inEnum && $line =~ m/^([^#].+)\s+(\S+\s*\(.*\).*?)\{\s*$/){
 			# its a function
 			my $put;
 			$put = "$1 $function_prepend" . "$2 {";
