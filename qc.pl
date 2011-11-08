@@ -541,7 +541,9 @@ sub compileCPP {
 				push @$gen, "$line";
 			} else {
 				if(!$inClass){
-					push @$gen, "$line" . ";"; # add a semicolor :)
+					if(!$inEnum){
+						push @$gen, "$line" . ";"; # add a semicolor :)
+					}
 				} elsif($braceLevel > 0){
 					push @$gen, "$line" . ";";
 				}
